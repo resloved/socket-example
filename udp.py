@@ -35,15 +35,11 @@ if args.mode == 'client':
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(5)
             try:
-                s.connect((HOST, PORT))
-            except socket.error:
-                sys.exit('error: connection could not be made')
-            try:
-                s.send(DATA)
+                s.sendto(DATA, (HOST, PORT))
             except socket.error:
                 sys.exit('error: data could not reach the server')
             try:
-                recv = s.recv(4096)
+                recv, server = s.recvfrom(4096)
                 print(recv.decode("utf-8"))
             except socket.error:
                 sys.exit('error: no response from the server')
@@ -59,16 +55,13 @@ else:
     print('Listening...')
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.bind(('', PORT))
-        s.listen(1)
         try:
             while True:
-                conn, addr = s.accept()
-                with conn:
-                    print(addr[0], 'has connected')
-                    recv = conn.recv(1024)
-                    try:
-                        conn.send(str(float(recv) * 2).encode())
-                    except ValueError:
-                        conn.send(b'error: input must be a number')
+                recv, addr = s.recvfrom(1024)
+                print(addr[0], 'has connected')
+                try:
+                    s.sendto(str(float(recv) * 2).encode(), addr)
+                except ValueError:
+                    s.sendto(b'error: input must be a number', addr)
         except KeyboardInterrupt:
             print('Closing Server')
