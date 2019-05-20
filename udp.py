@@ -54,7 +54,10 @@ else:
     print('Server Mode')
     print('Listening...')
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-        s.bind(('', PORT))
+        try:
+            s.bind(('', PORT))
+        except socket.error:
+            sys.exit('error: port already in use')
         try:
             while True:
                 recv, addr = s.recvfrom(1024)
